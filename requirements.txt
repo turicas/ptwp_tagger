@@ -1,2 +1,4 @@
 pymongo
 pypln.api
+numpy
+matplotlib

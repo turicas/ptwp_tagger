@@ -4,6 +4,7 @@
 .idea/*
 dist/*
 build/*
+data/*
 *.egg-info/*
 .idea/*
 .coverage

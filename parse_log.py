@@ -2,6 +2,8 @@
 # coding: utf-8
 
 from collections import defaultdict
+import glob
+import os
 from re import compile as regexp_compile
 
 
@@ -28,7 +30,10 @@ def parse_log(filename):
             data = namespace['data']
             job_durations[data['job id']] = data['duration']
 
-    log_files = {worker: open('worker-{}.csv'.format(worker), 'w')
+    # We need to append instead of writing, because we want information from
+    # more than one log file (there is one for each server where there is a
+    # broker running).
+    log_files = {worker: open('data/worker-{}.csv'.format(worker), 'a')
                  for worker in job_ids.keys()}
 
     worker_durations = defaultdict(list)
@@ -43,7 +48,12 @@ def parse_log(filename):
 
 
 def main():
-    parse_log('broker.log')
+    # Move old files, so this will not append to them.
+    for existing_file in glob.glob("data/worker-*.csv"):
+        os.rename(existing_file, "{}.old".format(existing_file))
+
+    for filename in glob.glob("data/*_broker.log"):
+        parse_log(filename)
 
 if __name__ == '__main__':
     main()

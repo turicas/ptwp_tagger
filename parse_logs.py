@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from collections import defaultdict
 import glob
 import os
+import sys
+
+from collections import defaultdict
 from re import compile as regexp_compile
 
 
@@ -33,7 +35,7 @@ def parse_log(filename):
     # We need to append instead of writing, because we want information from
     # more than one log file (there is one for each server where there is a
     # broker running).
-    log_files = {worker: open('data/worker-{}.csv'.format(worker), 'a')
+    log_files = {worker: open('data/worker-{}.dat'.format(worker), 'a')
                  for worker in job_ids.keys()}
 
     worker_durations = defaultdict(list)
@@ -42,17 +44,26 @@ def parse_log(filename):
             if job_id in job_durations:
                 log_files[worker].write("{}\t{}\n"
                                         .format(job_id, job_durations[job_id]))
+                del job_durations[job_id]
+            else:
+                sys.stderr.write('ERROR: job id {} not in job durations.\n'
+                                 .format(job_id))
 
     for worker, fobj in log_files.items():
         fobj.close()
 
+    if len(job_durations):
+        sys.stderr.write('ERROR: some job durations were not used - probably '
+                         'the first part of log is missing.\n')
 
 def main():
+    if not os.path.exists('data'):
+        os.mkdir('data')
     # Move old files, so this will not append to them.
-    for existing_file in glob.glob("data/worker-*.csv"):
+    for existing_file in glob.glob("data/worker-*.dat"):
         os.rename(existing_file, "{}.old".format(existing_file))
 
-    for filename in glob.glob("data/*_broker.log"):
+    for filename in glob.glob("logs/*-broker.log"):
         parse_log(filename)
 
 if __name__ == '__main__':

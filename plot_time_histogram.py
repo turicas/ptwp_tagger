@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import glob
+import os
 import sys
 
 from matplotlib import pyplot
@@ -30,12 +31,18 @@ for filename in filenames:
 
         outliers[worker_name] = original_size - filtered_size
 
+try:
+    os.mkdir('data/graphs')
+except OSError:
+    pass
 
-labels = ["{} ({})".format(worker, outliers[worker]) for worker in data.keys()]
-pyplot.hist(data.values(), label=labels)
-pyplot.legend(title="Worker (outliers removed)", #fontsize="small",
-        fancybox=True)
-pyplot.suptitle("Execution times greater than {}s were "
-        "removed".format(THRESHOLD))
-pyplot.xlabel("Worker execution time (in seconds)")
-pyplot.savefig("data/execution_time_histogram.png")
+for worker in data.keys():
+    label = "{} ({})".format(worker, outliers[worker])
+    pyplot.hist(data[worker], label=label)
+    pyplot.legend(title="Worker (outliers removed)", #fontsize="small",
+            fancybox=True)
+    pyplot.suptitle("Execution times greater than {}s were "
+            "removed".format(THRESHOLD))
+    pyplot.xlabel("Worker execution time (in seconds)")
+    pyplot.savefig("data/graphs/{}_execution_time_histogram.png".format(worker))
+    pyplot.close()

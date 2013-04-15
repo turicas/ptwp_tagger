@@ -85,10 +85,10 @@ def download_broker_logs():
 
 @task
 @roles('web')
-def check_progress():
+def check_progress(corpus=""):
     put("check_progress.py", "/srv/pypln/project/web/pypln/web/")
     with prefix("source /srv/pypln/project/bin/activate"), \
             cd("/srv/pypln/project/web/pypln/web/"):
         pythonpath = "/srv/pypln/project/web/pypln/web/apps/:$PYTHONPATH"
         run("PYTHONPATH={} DJANGO_SETTINGS_MODULE=settings.production python "
-            "check_progress.py ".format(pythonpath))
+            "check_progress.py {}".format(pythonpath, corpus))

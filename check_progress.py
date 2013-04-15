@@ -1,14 +1,19 @@
+import sys
 import pymongo
 
 from django.conf import settings
 
 from apps.core.models import Document
 
+if len(sys.argv) == 2:
+    corpus_name = sys.argv[1]
+    queryset = Document.objects.filter(corpus__name=corpus_name)
+else:
+    queryset = Document.objects.all()
 
 conn = pymongo.connection.Connection(host=settings.MONGODB_CONFIG['host'],
         port=settings.MONGODB_CONFIG['port'])
 collection = conn['pypln']['analysis']
-
 
 expected_properties = set([u'mimetype', u'freqdist',
     u'average_sentence_repertoire', u'language', u'average_sentence_length',
@@ -18,9 +23,9 @@ expected_properties = set([u'mimetype', u'freqdist',
 
 inexistent_ids = []
 incomplete_ids = []
+total_documents = len(queryset)
 
-
-for doc in Document.objects.all():
+for doc in queryset:
     doc_entry = collection.find_one(
         {u"_id": u"id:{}:_properties".format(doc.id)})
 
@@ -38,5 +43,6 @@ for doc in Document.objects.all():
         print("\t\tDiff: {}".format(diff))
         incomplete_ids.append(doc.id)
 
+print("Total documents: {}".format(total_documents))
 print("Inexistent documents: {}".format(len(inexistent_ids)))
 print("Incomplete documents: {}".format(len(incomplete_ids)))

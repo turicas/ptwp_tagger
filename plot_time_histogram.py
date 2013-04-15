@@ -8,10 +8,7 @@ from matplotlib import pyplot
 
 # There are some outliers that make the histogram useless. For now we'll remove
 # any execution time above 1 second.
-THRESHOLD = 30.0
-
 data = {}
-outliers = {}
 
 filenames = glob.glob("data/worker-*.dat")
 if not filenames:
@@ -25,24 +22,14 @@ for filename in filenames:
         data[worker_name] = [float(line.split('\t')[1].strip())
                                 for line in fd.readlines()]
 
-        original_size = len(data[worker_name])
-        data[worker_name] = filter(lambda x: x < THRESHOLD, data[worker_name])
-        filtered_size = len(data[worker_name])
-
-        outliers[worker_name] = original_size - filtered_size
-
 try:
     os.mkdir('data/graphs')
 except OSError:
     pass
 
 for worker in data.keys():
-    label = "{} ({})".format(worker, outliers[worker])
-    pyplot.hist(data[worker], label=label)
-    pyplot.legend(title="Worker (outliers removed)", #fontsize="small",
-            fancybox=True)
-    pyplot.suptitle("Execution times greater than {}s were "
-            "removed".format(THRESHOLD))
+    pyplot.hist(data[worker], label=worker)
+    pyplot.legend(fancybox=True)
     pyplot.xlabel("Worker execution time (in seconds)")
     pyplot.savefig("data/graphs/{}_execution_time_histogram.png".format(worker))
     pyplot.close()

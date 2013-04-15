@@ -5,6 +5,7 @@ import argparse
 import sys
 import time
 
+from datetime import timedelta
 from re import compile as regexp_compile
 from tempfile import TemporaryFile
 
@@ -45,13 +46,15 @@ def main():
     parser.add_argument('corpus',
                         help='Name of the corpus to upload documents to '
                              "(if doesn't exists, will be created)")
-    parser.add_argument('--files-per-request',
-                        help='Number of files to send in a single request')
+    parser.add_argument('--pages-per-request',
+                        help='Number of pages to send in a single request')
+    parser.add_argument('--max-pages',
+                        help='Maximum number of pages to send')
     args = parser.parse_args()
-    if args.files_per_request:
-        files_per_request = int(args.files_per_request)
+    if args.pages_per_request:
+        pages_per_request = int(args.pages_per_request)
     else:
-        files_per_request = 10
+        pages_per_request = 10
 
     mongo_config = regexp_mongodb.findall(args.mongodb)
     if not mongo_config:
@@ -85,10 +88,14 @@ def main():
     print 'Uploading...'
     query_filter = {'uploaded': False}
     total = float(collection.find(query_filter).count())
+    if args.max_pages:
+        max_pages = int(args.max_pages)
+    else:
+        max_pages = total
     counter = 0
-    report = '\r  {:07d} / {:07d} ({:5.2f}%), {:10.3f}s ({:15.3f}p/s)'
+    report = '\r  {:07d} / {:07d} ({:5.2f}%), {:10.3f}s ({:9.3f}p/s). ETA: {}'
     start_time = time.time()
-    page_iterator = partition(collection.find(query_filter), files_per_request)
+    page_iterator = partition(collection.find(query_filter), pages_per_request)
     for pages in page_iterator:
         temp_files, filenames = [], []
         for page in pages:
@@ -107,9 +114,13 @@ def main():
         percentual = 100 * (counter / total)
         delta_time = time.time() - start_time
         rate = counter / delta_time
+        eta = timedelta(((max_pages - counter) / rate) / (24 * 3600))
         sys.stdout.write(report.format(counter, int(total), percentual,
-                                       delta_time, rate))
+                                       delta_time, rate, eta))
         sys.stdout.flush()
+
+        if max_pages and counter >= max_pages:
+            break
     sys.stdout.write('\n')
 
 

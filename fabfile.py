@@ -2,7 +2,7 @@
 
 import os
 
-from fabric.api import task, hosts, run, env, get, roles, local
+from fabric.api import task, hosts, run, env, get, put, roles, local, prefix, cd
 
 
 env.roledefs.update({
@@ -82,3 +82,13 @@ def download_broker_logs():
         get(log_filename, local_filename)
     local('cat logs/broker-{0}*.log > logs/{0}-broker.log'.format(machine))
     local('rm logs/broker-{}*.log'.format(machine))
+
+@task
+@roles('web')
+def check_progress():
+    put("check_progress.py", "/srv/pypln/project/web/pypln/web/")
+    with prefix("source /srv/pypln/project/bin/activate"), \
+            cd("/srv/pypln/project/web/pypln/web/"):
+        pythonpath = "/srv/pypln/project/web/pypln/web/apps/:$PYTHONPATH"
+        run("PYTHONPATH={} DJANGO_SETTINGS_MODULE=settings.production python "
+            "check_progress.py ".format(pythonpath))

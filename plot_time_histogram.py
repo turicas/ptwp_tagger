@@ -28,7 +28,7 @@ except OSError:
     pass
 
 for worker in data.keys():
-    pyplot.hist(data[worker], label=worker)
+    pyplot.hist(data[worker], bins=100, label=worker)
     pyplot.legend(fancybox=True)
     pyplot.xlabel("Worker execution time (in seconds)")
     pyplot.savefig("data/graphs/{}_execution_time_histogram.png".format(worker))

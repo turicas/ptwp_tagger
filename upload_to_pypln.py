@@ -87,15 +87,17 @@ def main():
 
     print 'Uploading...'
     query_filter = {'uploaded': False}
-    total = float(collection.find(query_filter).count())
+    total = float(collection.count())
     if args.max_pages:
         max_pages = int(args.max_pages)
     else:
         max_pages = total
-    counter = 0
+    counter = collection.find({'uploaded': True}).count()
+    initial_counter = counter
     report = '\r  {:07d} / {:07d} ({:5.2f}%), {:10.3f}s ({:9.3f}p/s). ETA: {}'
     start_time = time.time()
-    page_iterator = partition(collection.find(query_filter), pages_per_request)
+    cursor = collection.find(query_filter, timeout=False)
+    page_iterator = partition(cursor, pages_per_request)
     for pages in page_iterator:
         temp_files, filenames = [], []
         for page in pages:
@@ -113,7 +115,7 @@ def main():
         counter += len(pages)
         percentual = 100 * (counter / total)
         delta_time = time.time() - start_time
-        rate = counter / delta_time
+        rate = (counter - initial_counter) / delta_time
         eta = timedelta(((max_pages - counter) / rate) / (24 * 3600))
         sys.stdout.write(report.format(counter, int(total), percentual,
                                        delta_time, rate, eta))
@@ -122,6 +124,7 @@ def main():
         if max_pages and counter >= max_pages:
             break
     sys.stdout.write('\n')
+    cursor.close()
 
 
 if __name__ == '__main__':

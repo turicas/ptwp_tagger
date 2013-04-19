@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import os
+import shutil
 
 from fabric.api import task, hosts, run, env, get, put, roles, local, prefix, cd
 
@@ -62,26 +63,41 @@ def start_brokers():
 def start_web():
     run('supervisorctl start pypln-web')
 
+def mkdir_if_not_exists(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+
 @task
 @roles('broker')
 def download_broker_logs():
-    log_filename = '/srv/pypln/logs/pypln-broker.out*'
-    if env.host == 'fgv.pypln.org':
-        log_filename = '/srv/pypln/wikipedia/logs/pypln-broker.out*'
-    if not os.path.exists('logs'):
-        os.mkdir('logs')
     machine = env.host.split('.')[0]
-    logs = run('ls -1 {}'.format(log_filename))
-    for log_filename in logs.split('\n'):
-        log_filename = log_filename.strip()
-        tail = log_filename.split('.out')[1].replace('.', '')
-        if tail:
-            tail = '-' + tail
-        new_name = 'broker-{}{}.log'.format(machine, tail)
-        local_filename = os.path.join('logs', new_name)
-        get(log_filename, local_filename)
-    local('cat logs/broker-{0}*.log > logs/{0}-broker.log'.format(machine))
-    local('rm logs/broker-{}*.log'.format(machine))
+    mkdir_if_not_exists('logs')
+    try:
+        shutil.rmtree('logs/{}'.format(machine))
+    except OSError:
+        pass
+    mkdir_if_not_exists('logs/{}'.format(machine))
+    log_filename = '/srv/pypln/logs/pypln-broker.out'
+    if env.host == 'fgv.pypln.org':
+        log_filename = '/srv/pypln/wikipedia/logs/pypln-broker.out'
+    log_directory = os.path.dirname(log_filename)
+    log_filename = os.path.basename(log_filename)
+
+    log_tarball = 'broker-logs.tar.gz'
+    with cd(log_directory):
+        # first, old logs
+        run('rm -f {}'.format(log_tarball))
+        run('tar -zcf {} {}'.format(log_tarball, log_filename + '.*'))
+        remote_filename = os.path.join(log_directory, log_tarball)
+        get(remote_filename, 'logs/{}/{}'.format(machine, log_tarball))
+        run('rm -f {}'.format(log_tarball))
+
+        get(log_filename, 'logs/{}/'.format(machine))
+
+        local('cd logs/{0}/ && tar xfz {1} && cd ..'
+              .format(machine, log_tarball))
+        local('cat logs/{0}/*.out* > logs/{0}-broker.log'.format(machine))
+        local('rm -rf logs/{}/'.format(machine))
 
 @task
 @roles('web')

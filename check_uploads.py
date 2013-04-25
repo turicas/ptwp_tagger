@@ -37,7 +37,7 @@ for doc in collection.find(timeout=False):
         uploaded_docs += 1
 
     collection.update({"_id": doc['_id']}, {"$set": {"uploaded": uploaded}})
-    checked_docs = not_uploaded_docs + uploaded_docs
+    checked_docs = not_uploaded_docs + uploaded_docs + duplicated_docs
     sys.stdout.write("\r{:06d}/{:06d} ({:06d} not, {:06d} duplicated, "
             "{:06d} ok)".format(checked_docs, total_docs, not_uploaded_docs,
                 duplicated_docs, uploaded_docs))

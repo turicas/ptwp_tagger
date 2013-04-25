@@ -108,3 +108,13 @@ def check_progress(corpus=""):
         pythonpath = "/srv/pypln/project/web/pypln/web/apps/:$PYTHONPATH"
         run("PYTHONPATH={} DJANGO_SETTINGS_MODULE=settings.production python "
             "check_progress.py {}".format(pythonpath, corpus))
+
+@task
+@roles('web')
+def check_uploads(corpus=""):
+    put("check_uploads.py", "/srv/pypln/project/web/pypln/web/")
+    with prefix("source /srv/pypln/project/bin/activate"), \
+            cd("/srv/pypln/project/web/pypln/web/"):
+        pythonpath = "/srv/pypln/project/web/pypln/web/apps/:$PYTHONPATH"
+        run("PYTHONPATH={} DJANGO_SETTINGS_MODULE=settings.production python "
+            "check_uploads.py {}".format(pythonpath, corpus))

@@ -42,3 +42,5 @@ for doc in collection.find(timeout=False):
             "{:06d} ok)".format(checked_docs, total_docs, not_uploaded_docs,
                 duplicated_docs, uploaded_docs))
     sys.stdout.flush()
+sys.stdout.write("\n{}".format(duplicated_names))
+sys.stdout.flush()

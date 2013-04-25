@@ -22,7 +22,7 @@ total_docs = collection.count()
 
 for doc in collection.find(timeout=False):
     try:
-        Document.objects.get(blob="/"+gridfs_storage.get_valid_name(u"{}.txt".format(doc["title"])))
+        queryset.get(blob="/"+gridfs_storage.get_valid_name(u"{}.txt".format(doc["title"])))
     except ObjectDoesNotExist:
         uploaded = False
         not_uploaded_docs += 1

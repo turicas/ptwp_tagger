@@ -70,8 +70,6 @@ def main():
             sys.stdout.flush()
             last_checked_docs = checked_docs
             last_time = time()
-    sys.stdout.write("\n{}".format(duplicated_names))
-    sys.stdout.flush()
 
 
 if __name__ == '__main__':

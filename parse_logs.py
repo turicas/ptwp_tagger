@@ -46,15 +46,16 @@ def parse_log(filename):
                                         .format(job_id, job_durations[job_id]))
                 del job_durations[job_id]
             else:
-                sys.stderr.write('ERROR: job id {} not in job durations.\n'
-                                 .format(job_id))
+                sys.stderr.write('[{}] ERROR: job id {} not in job durations.\n'
+                                 .format(filename, job_id))
 
     for worker, fobj in log_files.items():
         fobj.close()
 
     if len(job_durations):
-        sys.stderr.write('ERROR: some job durations were not used - probably '
-                         'the first part of log is missing.\n')
+        for key, value in job_durations.items():
+            sys.stderr.write('[{}] ERROR: job duration not used: {}\n'
+                             .format(filename, key))
 
 def main():
     if not os.path.exists('data'):

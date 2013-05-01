@@ -99,32 +99,25 @@ def download_broker_logs():
         local('cat logs/{0}/*.out* > logs/{0}-broker.log'.format(machine))
         local('rm -rf logs/{}/'.format(machine))
 
-@task
-@roles('web')
-def check_progress(corpus=""):
-    put("check_progress.py", "/srv/pypln/project/web/pypln/web/")
+def upload_and_run_inside_django_env(filename, args=''):
+    put(filename, "/srv/pypln/project/web/pypln/web/")
     with prefix("source /srv/pypln/project/bin/activate"), \
             cd("/srv/pypln/project/web/pypln/web/"):
         pythonpath = "/srv/pypln/project/web/pypln/web/apps/:$PYTHONPATH"
         run("PYTHONPATH={} DJANGO_SETTINGS_MODULE=settings.production python "
-            "check_progress.py {}".format(pythonpath, corpus))
+            "{} {}".format(filename, args))
+
+@task
+@roles('web')
+def check_progress(corpus=""):
+    upload_and_run_inside_django_env('check_progress.py', corpus)
 
 @task
 @roles('web')
 def calculate_pos_size(corpus="ptwp"):
-    put("calculate_pos_size.py", "/srv/pypln/project/web/pypln/web/")
-    with prefix("source /srv/pypln/project/bin/activate"), \
-            cd("/srv/pypln/project/web/pypln/web/"):
-        pythonpath = "/srv/pypln/project/web/pypln/web/apps/:$PYTHONPATH"
-        run("PYTHONPATH={} DJANGO_SETTINGS_MODULE=settings.production python "
-            "calculate_pos_size.py {}".format(pythonpath, corpus))
+    upload_and_run_inside_django_env('calculate_pos_size.py', corpus)
 
 @task
 @roles('web')
 def check_uploads(corpus="ptwp"):
-    put("check_uploads.py", "/srv/pypln/project/web/pypln/web/")
-    with prefix("source /srv/pypln/project/bin/activate"), \
-            cd("/srv/pypln/project/web/pypln/web/"):
-        pythonpath = "/srv/pypln/project/web/pypln/web/apps/:$PYTHONPATH"
-        run("PYTHONPATH={} DJANGO_SETTINGS_MODULE=settings.production python "
-            "check_uploads.py {}".format(pythonpath, corpus))
+    upload_and_run_inside_django_env('check_uploads.py', corpus)

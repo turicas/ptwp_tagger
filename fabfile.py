@@ -105,7 +105,7 @@ def upload_and_run_inside_django_env(filename, args=''):
             cd("/srv/pypln/project/web/pypln/web/"):
         pythonpath = "/srv/pypln/project/web/pypln/web/apps/:$PYTHONPATH"
         run("PYTHONPATH={} DJANGO_SETTINGS_MODULE=settings.production python "
-            "{} {}".format(filename, args))
+            "{} {}".format(pythonpath, filename, args))
 
 @task
 @roles('web')

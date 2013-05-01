@@ -9,11 +9,12 @@ from apps.core.models import Document
 
 
 def main():
-    if len(sys.argv) == 2:
-        corpus_name = sys.argv[1]
-        queryset = Document.objects.filter(corpus__name=corpus_name)
-    else:
-        queryset = Document.objects.all()
+    if len(sys.argv) != 2:
+        exit(1)
+
+    corpus_name = sys.argv[1]
+    doc_ids = Document.objects.filter(corpus__name=corpus_name).values_list(
+        'id', flat=True)
 
     conn = pymongo.connection.Connection(host=settings.MONGODB_CONFIG['host'],
             port=settings.MONGODB_CONFIG['port'])
@@ -23,8 +24,9 @@ def main():
     total_documents = 0
     size = sys.getsizeof
     tuple_size = size((None, None, None)) # 3-elements tuple size
-    for doc in queryset:
-        doc_entry = collection.find_one({u"_id": u"id:{}:pos".format(doc.id)})
+    for doc_id in doc_ids:
+        doc_entry = collection.find_one({u"_id": u"id:{}:pos".format(doc_id)},
+                {"value": 1, "_id": 0})
         if doc_entry is None:
             continue
         total_documents += 1

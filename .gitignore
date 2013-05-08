@@ -12,3 +12,7 @@ reg_settings.py
 MANIFEST
 .directory
 .tox
+*.aux
+*.log
+*.pdf
+*.sqlite

@@ -121,3 +121,9 @@ def calculate_pos_size(corpus="ptwp"):
 @roles('web')
 def check_uploads(corpus="ptwp"):
     upload_and_run_inside_django_env('check_uploads.py', corpus)
+
+@task
+@roles('web')
+def export(corpus="ptwp"):
+    put('sqlite_corpus.py', "/srv/pypln/project/web/pypln/web/")
+    upload_and_run_inside_django_env('export_to_sqlite.py', corpus)

@@ -17,7 +17,7 @@ license). The goals of this project are:
   it to NLTK's tagset.
 - We won't use an incremental tagger (the entire corpus will be loaded in
   memory to train a NLTK tagger).
-- We still need to learn about trainers to decide which to use.
+
 
 
 ## Next Goals
